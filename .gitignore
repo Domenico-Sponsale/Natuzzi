@@ -1,0 +1,17 @@
+.vscode
+
+venv
+
+BUILDS
+
+notes.txt
+
+__pycache__
+
+PolicyGDPR_**
+
+assets/**
+
+!assets/logo n.png
+!assets/Logo no sigillo_BLACK.png
+!assets/i.ico

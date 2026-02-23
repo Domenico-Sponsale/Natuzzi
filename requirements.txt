@@ -1,0 +1,11 @@
+colorama
+PyMuPDF
+numpy
+pandas
+python-dotenv
+Pillow
+pywin32
+keyboard
+Requests
+pyinstaller
+openpyxl
