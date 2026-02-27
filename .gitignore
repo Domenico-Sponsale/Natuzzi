@@ -1,9 +1,0 @@
-venv
-*spec
-*log
-build
-Laterza
-*decompiler.py
-*txt
-.vscode
-*workspace
