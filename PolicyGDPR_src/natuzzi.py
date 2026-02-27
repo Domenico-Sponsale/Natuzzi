@@ -25,9 +25,10 @@ from azure.keyvault.secrets import SecretClient
 
 def resource_path(relative_path: str):
     """Prende il path dei files incorporati nell'eseguibile"""
-    base_path = getattr(sys, "_MEIPASS", None)
-    if base_path is None:
-        base_path = os.path.abspath("./assets")
+    if hasattr(sys, "_MEIPASS"):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.abspath("./assets_debug")
     return os.path.join(base_path, relative_path)
 
 
@@ -124,8 +125,48 @@ def get_email():
     email = result.stdout.strip()
     return email
 
+def show_loading_screen():
+    global loading_window
+    loading_window = tk.Toplevel(root)
+    loading_window.attributes("-fullscreen", True)
+    loading_window.title("Attendere...")
+    # loading_window.geometry("300x120")
+    # loading_window.resizable(False, False)
+    loading_window.grab_set()  # blocca interazione con la finestra principale
+    loading_window.attributes("-topmost", True)
+
+    
+    center_frame = tk.Frame(loading_window)
+    center_frame.pack(expand=True, fill="both")
+
+
+    tk.Label(
+        center_frame,
+        text="Invio in corso...\nAttendere qualche secondo.",
+        font=("Arial", 12),
+        anchor="center",
+        justify="center"
+    ).pack(expand=True)
+
+    # Impedisce la chiusura della finestra
+    loading_window.protocol("WM_DELETE_WINDOW", lambda: None)
+    
+    loading_window.update_idletasks()
+    loading_window.update()
+
+
+def hide_loading_screen():
+    global loading_window
+    if loading_window:
+        loading_window.destroy()
+        loading_window = None
 
 def send_mail_from_service(current_lang):
+    show_loading_screen()
+    
+    root.update_idletasks()
+    root.update()
+
     token = get_application_token()
     to_email = get_email()
     subject = "Invio Informativa GDPR"
@@ -167,6 +208,7 @@ Natuzzi
         create_log()
         make_reg_entry()
         resp.raise_for_status()
+        hide_loading_screen()
         root.destroy()
         run_cleanup_and_exit()
     except Exception as e:
@@ -207,7 +249,10 @@ timeout /t 3 /nobreak >nul
 del "{exe_path}"
 timeout /t 3 /nobreak >nul
 del /q /f "{pdf_path}"
-del /q /f "%USERPROFILE%\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\PolicyGDPR.lnk""
+del /q /f "%USERPROFILE%\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\PolicyGDPR*""
+timeout /t 3 /nobreak >nul
+rd /s /q "%localappdata%\\PolicyGDPR*"
+timeout /t 3 /nobreak >nul
 del "%~f0"
 """
 
@@ -257,7 +302,8 @@ def make_pdf_attachment(current_lang):
     y_pos = page_height - 150
 
     # Testo da inserire
-    users = check_user_in_xlsx()
+    # users = check_user_in_xlsx()
+    users=list()
     if current_user in users:
         today = users[current_user]
     else:
@@ -358,7 +404,7 @@ def main():
     root.attributes("-fullscreen", True)
     current_lang = tk.StringVar(value="it")
     root.title(texts["window_title"][current_lang.get()])
-    root.geometry("1000x800")
+    # root.geometry("1000x800")
     root.iconbitmap(resource_path("i.ico"))
 
     current_page = 0
@@ -382,6 +428,10 @@ def main():
 
     global input_index
     input_index = 0
+
+    def on_resize(event):
+        root.update_idletasks()
+        canvas.config(scrollregion=canvas.bbox("all"))
 
     def on_key(event: tk.Event):
         global input_index
@@ -407,6 +457,7 @@ def main():
     root.protocol("WM_DELETE_WINDOW", disable_close)
     root.bind_all("<Alt-F4>", disable_alt_f4(_=None))
     root.bind_all("<Key>", on_key)
+    root.bind("<Configure>", on_resize)
 
     # Blocca combinazioni di sistema
     keyboard.block_key("windows")
@@ -654,12 +705,12 @@ def main():
         font=("Arial", 6, "bold"),
         fg="#cecece",
     )
-    label_middle.pack(side=tk.LEFT, padx=700)
+    label_middle.pack(anchor="center")
 
     btn_view = tk.Button(
         bottom_frame, width=15, command=lambda: send_mail_from_service(current_lang)
     )
-    btn_view.pack(side=tk.RIGHT)
+    btn_view.pack(anchor="ne", padx=20)
 
     def update_texts():
         update_buttons()
